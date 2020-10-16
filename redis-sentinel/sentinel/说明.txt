@@ -1,0 +1,1 @@
+将conf文件cp三份，分别命名为yml文件中所指名的sentinel1.conf、sentinel2.conf、sentinel3.conf

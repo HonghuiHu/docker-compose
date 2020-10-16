@@ -1,0 +1,67 @@
+version: '3.0'
+services:
+  kibana:
+    image: kibana:7.8.0
+    container_name: kibana7
+    environment:
+      - I18N_LOCALE=zh-CN
+      - XPACK_GRAPH_ENABLED=true
+      - TIMELION_ENABLED=true
+      - XPACK_MONITORING_COLLECTION_ENABLED="true"
+      - server.host= "0.0.0.0"
+    ports:
+      - 5601:5601
+    networks:
+      - elastic
+
+  elasticsearch:
+    image: elasticsearch:7.8.0
+    container_name: es7
+    environment:
+      - node.name=es7
+      - cluster.name=es-cluster
+      - discovery.seed_hosts=es7,es7_02
+      - cluster.initial_master_nodes=es7,es7_02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./es/data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elastic
+
+  elasticsearch2:
+    image: elasticsearch:7.8.0
+    container_name: es7_02
+    environment:
+      - node.name=es7_02
+      - cluster.name=es-cluster
+      - discovery.seed_hosts=es7,es7_02
+      - cluster.initial_master_nodes=es7,es7_02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./es2/data:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  logstash:
+    image: logstash:7.8.0
+    container_name: logstash7
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/logstash.conf
+    networks:
+      - elastic
+networks:
+  elastic:
+    driver: bridge

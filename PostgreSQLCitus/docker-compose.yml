@@ -1,0 +1,52 @@
+version: '2.0'
+
+services:
+  master:
+    container_name: "citus_master"
+    image: 'citusdata/citus:9.4.0'
+    ports: ["5432:5432"]
+    labels: ['com.citusdata.role=Master','citus.replication_model=streaming']
+    privileged: true
+    environment: &AUTH
+      POSTGRES_USER: "tripleh"
+      POSTGRES_PASSWORD: "tripleh"
+      PGUSER: "tripleh"
+      PGPASSWORD: "tripleh"
+      POSTGRES_HOST_AUTH_METHOD: "md5"
+      PGDATA: /var/lib/postgresql/data/pgdata:Z
+    volumes: 
+       - ./CN/data:/var/lib/postgresql/data/pgdata:Z
+  worker1:
+    image: 'citusdata/citus:9.4.0'
+    container_name: 'citus_work_1'
+    ports: ["5433:5432"]
+    labels: ['com.citusdata.role=Worker','citus.replication_model=streaming']
+    privileged: true
+    depends_on: [ manager ]
+    environment: *AUTH
+    command: "/wait-for-manager.sh"
+    volumes: 
+      - healthcheck-volume:/healthcheck
+      - ./Worker1/data:/var/lib/postgresql/data/pgdata:Z
+  worker2:
+    image: 'citusdata/citus:9.4.0'
+    container_name: 'citus_work_2'
+    ports: ["5434:5432"]
+    labels: ['com.citusdata.role=Worker','citus.replication_model=streaming']
+    privileged: true
+    depends_on: [ manager ]
+    environment: *AUTH
+    command: "/wait-for-manager.sh"
+    volumes: 
+      - healthcheck-volume:/healthcheck
+      - ./Worker2/data:/var/lib/postgresql/data/pgdata:Z
+  manager:
+    container_name: "citus_manager"
+    image: 'citusdata/membership-manager:0.3.0'
+    volumes: 
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - healthcheck-volume:/healthcheck
+    depends_on: [ master ]
+    environment: *AUTH
+volumes:
+  healthcheck-volume:

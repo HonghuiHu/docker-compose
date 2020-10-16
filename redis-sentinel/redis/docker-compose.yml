@@ -1,0 +1,29 @@
+version: '3.1'
+services:
+  master:
+    image: redis:5.0.4
+    container_name: redis-master
+    restart: always
+    command: redis-server --requirepass 123456 --masterauth 123456 --port 6379 --protected-mode no --slave-announce-ip 127.0.0.1 --slave-announce-port 6379 --bind 0.0.0.0
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data:/data
+  slave1:
+    image: redis:5.0.4
+    restart: always
+    container_name: redis-slave-1
+    ports:
+      - 6381:6379
+    command:  redis-server --slaveof redis-master 6379 --port 6379 --requirepass 123456 --masterauth 123456 --protected-mode no  --appendonly yes --slave-announce-ip 127.0.0.1 --slave-announce-port 6381 --bind 0.0.0.0
+    volumes:
+      - ./data:/data
+  slave2:
+    image: redis:5.0.4
+    container_name: redis-slave-2
+    restart: always
+    ports:
+      - 6382:6379
+    command:  redis-server --slaveof redis-master 6379 --port 6379 --requirepass 123456 --masterauth 123456 --protected-mode no  --appendonly yes --slave-announce-ip 127.0.0.1 --slave-announce-port 6382 --bind 0.0.0.0
+    volumes:
+      - ./data:/data
